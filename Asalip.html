@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>لعبة الضاد: المدح والذم والإغراء والتحذير</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<style>
+:root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{font-family:'Tajawal',Tahoma,Arial,sans-serif;background:linear-gradient(135deg,#0b1026,#1b1146 50%,#06283d);min-height:100vh;color:#f1f5f9;overflow-x:hidden}
+.glass{background:rgba(255,255,255,.08);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.15);border-radius:1.25rem;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.btn{background:linear-gradient(135deg,#6366f1,#06b6d4);border-radius:.9rem;padding:.7rem 1.2rem;font-weight:800;transition:.2s;cursor:pointer}
+.btn:hover{transform:translateY(-2px) scale(1.02)}.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.opt{background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.18);border-radius:1rem;padding:.9rem;font-size:1.2rem;font-weight:700;transition:.2s;cursor:pointer;width:100%}
+.opt:hover{background:rgba(99,102,241,.35);transform:translateY(-2px)}
+.ok{background:#16a34a!important;border-color:#4ade80!important;animation:pop .4s}.no{background:#dc2626!important;border-color:#f87171!important;animation:shake .4s}
+@keyframes pop{50%{transform:scale(1.05)}}@keyframes shake{25%{transform:translateX(8px)}75%{transform:translateX(-8px)}}
+.scr{display:none;animation:fi .5s}.scr.on{display:block}@keyframes fi{from{opacity:0;transform:translateY(14px)}}
+#cr{transition:opacity .6s}.medal{width:130px;height:130px;border-radius:50%;margin:auto;background:radial-gradient(circle at 30% 30%,#fff3b0,#f5b301 55%,#b07700);display:flex;align-items:center;justify-content:center;font-size:3.5rem;box-shadow:0 0 40px #f5b301aa;animation:pop 1.6s infinite}
+input,select{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);border-radius:.8rem;padding:.7rem;width:100%;color:#fff}select option{color:#000}
+.lock{opacity:.5;filter:grayscale(1)}#cv{position:fixed;inset:0;pointer-events:none;z-index:60}
+</style></head>
+<body>
+<canvas id="cv"></canvas>
+<div class="text-center py-2 font-extrabold text-amber-300 bg-black/30 sticky top-0 z-40"><span id="cr">مدرسة ربيعة الرأي الابتدائية</span></div>
+<div class="max-w-2xl mx-auto p-4">
+<div class="flex justify-between mb-3"><button class="btn" id="mu">🔊</button><button class="btn" onclick="$('md').classList.remove('hidden')">📖 القواعد</button></div>
+
+<section id="s0" class="scr on glass p-6 text-center space-y-4">
+<h1 class="text-3xl font-extrabold">🌙 لعبة الضاد</h1><p>المدح والذم • الإغراء والتحذير</p>
+<input id="nm" placeholder="اسم الطالب الثلاثي"><input id="gr" inputmode="numeric" maxlength="1" placeholder="الصف الدراسي (اكتب رقمًا من ١ إلى ٦)">
+<p id="er" class="text-red-400"></p><button class="btn w-full" onclick="start()">ابدأ الرحلة 🚀</button></section>
+
+<section id="s1" class="scr glass p-6 space-y-3 text-center">
+<h2 class="text-2xl font-extrabold">اختر المستوى</h2>
+<button class="btn w-full" id="l1" onclick="play(1)">🟢 المستوى 1: السهل</button>
+<button class="btn w-full lock" id="l2" onclick="play(2)">🟡 المستوى 2: المتوسط 🔒</button>
+<button class="btn w-full lock" id="l3" onclick="play(3)">🔴 المستوى 3: الصعب 🔒</button>
+<button class="btn w-full" onclick="fast()">⚡ تحدي التمييز السريع</button></section>
+
+<section id="s2" class="scr glass p-5 space-y-3">
+<div class="flex justify-between font-bold"><span>⭐ <b id="sc">0</b></span><span>🔥 تتابع <b id="stk">0</b></span><span>⏱ <b id="tm">20</b></span></div>
+<div class="h-2 bg-white/20 rounded"><div id="bar" class="h-2 bg-cyan-400 rounded" style="width:100%;transition:width 1s linear"></div></div>
+<div class="text-sm opacity-70" id="pg"></div>
+<h3 id="q" class="text-2xl font-extrabold leading-loose"></h3>
+<div id="op" class="grid gap-2"></div>
+<div id="ex" class="hidden p-3 rounded-xl bg-white/10"></div>
+<div class="flex flex-wrap gap-2">
+<button class="btn" onclick="speak()">🔈 اقرأ</button>
+<button class="btn ai" onclick="askAI()">🤖 اسأل معلم الضاد الذكي</button>
+<button class="btn ai" onclick="newQ()">✨ سؤال جديد بالذكاء الاصطناعي</button>
+<button class="btn hidden" id="nx" onclick="next()">التالي ⬅</button></div>
+<div id="ai" class="hidden p-3 rounded-xl bg-indigo-500/20 whitespace-pre-wrap"></div></section>
+
+<section id="s3" class="scr glass p-6 text-center space-y-3">
+<div class="medal">🏆</div><h2 id="rn" class="text-2xl font-extrabold"></h2><p id="rg"></p>
+<div id="st" class="text-4xl"></div><p>النقاط: <b id="rs"></b> • الدقة: <b id="ra"></b>%</p><p id="rm" class="font-bold"></p>
+<div class="flex gap-2 justify-center"><button class="btn" onclick="play(S.lvl)">🔁 إعادة</button><button class="btn" onclick="show(1)">المستويات</button></div></section>
+
+<section id="s4" class="scr glass p-6 text-center space-y-3">
+<h2 class="text-2xl font-extrabold">⚡ تحدي التمييز السريع</h2>
+<div>⏱ <b id="ft">30</b> • صحيح: <b id="fc">0</b></div>
+<div id="fq" class="text-3xl font-extrabold py-4 leading-loose"></div>
+<div class="grid grid-cols-2 gap-2" id="fo"></div><button class="btn" onclick="clearInterval(S.ft);show(1)">رجوع</button></section>
+</div>
+
+<div id="md" class="hidden fixed inset-0 z-50 bg-black/70 p-4 overflow-auto" onclick="this.classList.add('hidden')"><div class="glass max-w-xl mx-auto p-5 leading-loose bg-slate-900" onclick="event.stopPropagation()">
+<h3 class="text-xl font-extrabold text-amber-300">أولاً: أسلوب المدح والذم</h3>
+<p>• أفعال المدح: (نِعْمَ) • أفعال الذم: (بِئْسَ)</p>
+<p>• الأركان: فعل المدح/الذم + الفاعل + المخصوص بالمدح أو الذم.</p>
+<p>• صور فاعل (نعم وبئس): 1. معرّف بـ (الـ) | 2. مضاف إلى معرّف بـ (الـ) | 3. ضمير مستتر مميز بنكرة (تمييز) | 4. اسم موصول (مَنْ أو ما).</p>
+<h3 class="text-xl font-extrabold text-amber-300 mt-2">ثانياً: أسلوب الإغراء والتحذير</h3>
+<p>• الإغراء: حث المخاطب على أمر محمود ليفعله.</p><p>• التحذير: تنبيه المخاطب على أمر مكروه ليتجنبه.</p>
+<p>• الصور: 1. الإفراد | 2. التكرار | 3. العطف | 4. مع (إيّاك) - خاص بالتحذير.</p>
+<button class="btn mt-3" onclick="$('md').classList.add('hidden')">إغلاق</button></div></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const Q={1:[
+["«نِعْمَ الخُلُقُ الصِّدْقُ» أي أسلوب؟",["المدح","الذم","الإغراء","التحذير"],"نِعْمَ فعل مدح."],
+["«بِئْسَ الصِّفَةُ الكَذِبُ» أي أسلوب؟",["الذم","المدح","الإغراء","التحذير"],"بِئْسَ فعل ذم."],
+["«الصِّدْقَ الصِّدْقَ» أي أسلوب؟",["الإغراء","التحذير","المدح","الذم"],"حثٌّ على أمر محمود فهو إغراء."],
+["«إِيَّاكَ والكَسَلَ» أي أسلوب؟",["التحذير","الإغراء","المدح","الذم"],"تنبيه على أمر مكروه فهو تحذير."],
+["فعل الذم هو:",["بِئْسَ","نِعْمَ","إِيَّاكَ","الْزَمْ"],"فعل الذم: بِئْسَ."],
+["التحذير هو:",["تنبيه المخاطب على أمر مكروه ليتجنبه","حث المخاطب على أمر محمود","مدح شيء","ذم شيء"],"التحذير تنبيه على المكروه."]],
+2:[
+["«نِعْمَ الرَّجُلُ خالِدٌ» فاعل نِعْمَ:",["معرّف بـ (الـ)","مضاف إلى معرّف بـ (الـ)","ضمير مستتر مميز بنكرة","اسم موصول"],"الرَّجُلُ معرّف بالـ."],
+["«نِعْمَ طالِبُ العِلْمِ مُحَمَّدٌ» فاعل نِعْمَ:",["مضاف إلى معرّف بـ (الـ)","معرّف بـ (الـ)","ضمير مستتر مميز بنكرة","اسم موصول"],"طالبُ مضاف إلى العلم المعرّف بالـ."],
+["«نِعْمَ رَجُلًا عَلِيٌّ» فاعل نِعْمَ:",["ضمير مستتر مميز بنكرة","معرّف بـ (الـ)","مضاف إلى معرّف بـ (الـ)","اسم موصول"],"الفاعل ضمير مستتر (هو) و(رجلًا) تمييز."],
+["«نِعْمَ مَنْ يُعِينُ الضَّعِيفَ عَلِيٌّ» فاعل نِعْمَ:",["اسم موصول","معرّف بـ (الـ)","ضمير مستتر مميز بنكرة","مضاف إلى معرّف بـ (الـ)"],"مَنْ اسم موصول."],
+["«الصِّدْقَ والأَمانَةَ» صورة الأسلوب:",["إغراء بالعطف","إغراء بالإفراد","تحذير بالتكرار","تحذير بـ (إيّاك)"],"كلمتان معطوفتان على أمر محمود."],
+["«الكَذِبَ الكَذِبَ» صورة الأسلوب:",["تحذير بالتكرار","إغراء بالتكرار","تحذير بالعطف","تحذير بـ (إيّاك)"],"الكذب مكروه وتكرر اللفظ."]],
+3:[
+["المخصوص بالمدح في «نِعْمَ الخُلُقُ الأَمانَةُ»:",["الأَمانَةُ","الخُلُقُ","نِعْمَ","لا يوجد"],"المخصوص هو المقصود بالمدح بعد الفاعل."],
+["إعراب «الخُلُقُ» في «نِعْمَ الخُلُقُ الأَمانَةُ»:",["فاعل مرفوع وعلامة رفعه الضمة","مبتدأ مرفوع","مفعول به منصوب","خبر مرفوع"],"فاعل نِعْمَ."],
+["إعراب «الكَذِبُ» في «بِئْسَ الخُلُقُ الكَذِبُ»:",["مخصوص بالذم مبتدأ مؤخر مرفوع","فاعل مرفوع","مفعول به منصوب","نعت مرفوع"],"المخصوص بالذم يعرب مبتدأً مؤخرًا."],
+["الضبط الصحيح للإغراء:",["الصِّدْقَ الصِّدْقَ","الصِّدْقُ الصِّدْقُ","الصِّدْقِ الصِّدْقِ","الصِّدْقَ الصِّدْقِ"],"منصوب بفعل محذوف تقديره: الْزَمْ."],
+["إعراب «إِيَّاكَ» في «إِيَّاكَ والكَسَلَ»:",["ضمير منفصل في محل نصب مفعول به لفعل محذوف","فاعل مرفوع","مبتدأ مرفوع","اسم مجرور"],"التقدير: احْذَرْ إِيَّاكَ."],
+["أكمل بالضبط الصحيح: «بِئْسَ ___ الغِشُّ»",["الخُلُقُ","الخُلُقَ","الخُلُقِ","خُلُقٌ"],"فاعل بئس معرّف بالـ مرفوع."]]};
+const F=[["نِعْمَ الخُلُقُ الصِّدْقُ",0],["نِعْمَ رَجُلًا عَلِيٌّ",0],["بِئْسَ الصِّفَةُ الكَذِبُ",1],["بِئْسَ الخُلُقُ الغِشُّ",1],["الجِدَّ الجِدَّ",2],["الصِّدْقَ والأَمانَةَ",2],["إِيَّاكَ والكَسَلَ",3],["الكَذِبَ الكَذِبَ",3],["إِيَّاكَ والغِيبَةَ",3]];
+const CATS=["المدح","الذم","الإغراء","التحذير"];
+const S={unlocked:1,mute:false};let sm=null,syn=null;
+if(window.claude&&claude.use)claude.use("sample").then(x=>{sm=x;if(!x)document.querySelectorAll('.ai').forEach(b=>b.classList.add('hidden'))}).catch(()=>{});
+const shuf=a=>a.slice().sort(()=>Math.random()-.5);
+function show(n){document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));$('s'+n).classList.add('on');if(n==1)for(let i=2;i<=3;i++){const b=$('l'+i),u=S.unlocked>=i;b.classList.toggle('lock',!u);b.textContent=['','','🟡 المستوى 2: المتوسط','🔴 المستوى 3: الصعب'][i]+(u?'':' 🔒')}}
+function snd(t){if(S.mute||typeof Tone==='undefined')return;try{if(!syn)syn=new Tone.PolySynth(Tone.Synth).toDestination();const n=Tone.now();
+if(t=='c')syn.triggerAttackRelease("C6","32n",n);if(t=='ok')syn.triggerAttackRelease(["E5","G5"],"8n",n);if(t=='no')syn.triggerAttackRelease("A2","4n",n);
+if(t=='win')["C5","E5","G5","C6"].forEach((x,i)=>syn.triggerAttackRelease(x,"8n",n+i*.15))}catch(e){}}
+document.addEventListener('click',()=>{if(typeof Tone!=='undefined'&&Tone.context.state!='running')Tone.start()},{once:true});
+$('mu').onclick=()=>{S.mute=!S.mute;$('mu').textContent=S.mute?'🔇':'🔊'};
+document.addEventListener('click',e=>{if(e.target.closest('.btn,.opt'))snd('c')});
+const crs=["مدرسة ربيعة الرأي الابتدائية","مدير المدرسة: علي بن ظافر آل حاسن","إعداد المعلم: نايف بن أحمد المعطاني"];let ci=0;
+setInterval(()=>{$('cr').style.opacity=0;setTimeout(()=>{ci=(ci+1)%3;$('cr').textContent=crs[ci];$('cr').style.opacity=1},600)},3500);
+function start(){const n=$('nm').value.trim(),g=$('gr').value.trim().replace(/[٠-٩]/g,d=>d.charCodeAt(0)-1632);if(n.split(/\s+/).length<3||!/^[1-6]$/.test(g)){$('er').textContent='أدخل الاسم الثلاثي ورقم الصف من ١ إلى ٦ للمتابعة';return}S.name=n;S.grade='١٢٣٤٥٦'[g-1];show(1)}
+function play(l){if(l>S.unlocked)return;S.lvl=l;S.list=shuf(Q[l]);S.i=0;S.score=0;S.streak=0;S.ok=0;show(2);render()}
+function render(){const [q,o,e]=S.list[S.i];S.lock=false;S.t=20;$('ai').classList.add('hidden');$('ex').classList.add('hidden');$('nx').classList.add('hidden');
+$('q').textContent=q;$('pg').textContent='السؤال '+(S.i+1)+' من '+S.list.length;$('sc').textContent=S.score;$('stk').textContent=S.streak;$('tm').textContent=20;
+const bar=$('bar');bar.style.transition='none';bar.style.width='100%';setTimeout(()=>{bar.style.transition='width 20s linear';bar.style.width='0%'},30);
+$('op').innerHTML='';shuf(o.map((t,k)=>({t,ok:k==0}))).forEach(x=>{const b=document.createElement('button');b.className='opt';b.textContent=x.t;b.dataset.ok=x.ok?1:0;b.onclick=()=>pick(b);$('op').appendChild(b)});
+clearInterval(S.tm);S.tm=setInterval(()=>{S.t--;$('tm').textContent=S.t;if(S.t<=0)pick(null)},1000)}
+function pick(b){if(S.lock)return;S.lock=true;clearInterval(S.tm);$('bar').style.transition='none';
+const good=b&&b.dataset.ok=='1';document.querySelectorAll('.opt').forEach(x=>{if(x.dataset.ok=='1')x.classList.add('ok')});
+if(good){S.streak++;S.ok++;S.score+=10+S.t+Math.min(S.streak,5)*2;snd('ok')}else{S.streak=0;if(b)b.classList.add('no');snd('no')}
+$('sc').textContent=S.score;$('stk').textContent=S.streak;$('ex').textContent=(good?'✅ أحسنت! ':b?'❌ ليست الصحيحة. ':'⏰ انتهى الوقت. ')+S.list[S.i][2];$('ex').classList.remove('hidden');$('nx').classList.remove('hidden')}
+function next(){S.i++;S.i>=S.list.length?finish():render()}
+function finish(){const acc=Math.round(S.ok/S.list.length*100),pass=acc>=60,st=acc>=90?3:acc>=75?2:1;
+$('rn').textContent=S.name;$('rg').textContent='الصف: '+S.grade;$('st').textContent='⭐'.repeat(st)+'☆'.repeat(3-st);$('rs').textContent=S.score;$('ra').textContent=acc;
+if(pass){S.unlocked=Math.max(S.unlocked,Math.min(3,S.lvl+1));$('rm').textContent=S.lvl<3?'🎉 اجتزت المستوى وفُتح المستوى التالي!':'🎉 أتممت جميع المستويات، بطل الضاد!';snd('win');boom()}else{$('rm').textContent='تحتاج 60% للاجتياز، حاول مرة أخرى 💪';snd('no')}show(3)}
+function speak(){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance($('q').textContent);u.lang='ar-SA';speechSynthesis.speak(u)}catch(e){}}
+async function askAI(){if(!sm)return;const [q,o,e]=S.list[S.i],d=$('ai');d.classList.remove('hidden');d.textContent='جارٍ التفكير...';
+try{const r=await sm('أنت «معلم الضاد الذكي» لطلاب المرحلة الابتدائية. اشرح بلغة عربية مبسطة ومشجعة في 3 جمل لماذا الإجابة الصحيحة هي ذلك، دون كشفها إن لم يُجب الطالب بعد.\nالسؤال: '+q+'\nالإجابة الصحيحة: '+o[0],{cache:false});d.textContent=r.text}catch(x){d.textContent='تعذّر الاتصال بالمعلم الذكي الآن.'}}
+async function newQ(){if(!sm)return;const d=$('ai');d.classList.remove('hidden');d.textContent='جارٍ توليد سؤال جديد...';
+try{const v=await sm.json('ولّد سؤالًا جديدًا ومختلفًا (رقم عشوائي '+Math.floor(Math.random()*999)+') في أسلوب المدح والذم أو الإغراء والتحذير للمستوى '+['','السهل (تمييز المفاهيم)','المتوسط (صور الفاعل أو صور الإغراء والتحذير)','الصعب (الأركان والإعراب والضبط)'][S.lvl]+' وفق: نعم وبئس، الفاعل (معرّف بأل/مضاف لمعرّف بأل/ضمير مستتر وتمييز/اسم موصول)، الإغراء والتحذير (إفراد/تكرار/عطف/إيّاك). أعد JSON فقط: {"q":"السؤال","o":["الإجابة الصحيحة أولًا","خطأ","خطأ","خطأ"],"e":"تعليل مختصر"}',{cache:false});
+if(!v||!v.q||!Array.isArray(v.o)||v.o.length!=4)throw 0;const it=[v.q,v.o.map(String),v.e||''];S.list.splice(S.i+1,0,it);Q[S.lvl].push(it);$('pg').textContent='السؤال '+(S.i+1)+' من '+S.list.length;d.textContent='✨ أُضيف سؤال جديد، سيظهر بعد هذا السؤال.'}catch(x){d.textContent='تعذّر توليد السؤال، حاول مجددًا.'}}
+function fast(){S.fs=0;S.fc=0;S.fl=30;show(4);fnext();$('ft').textContent=30;$('fc').textContent=0;clearInterval(S.ft);S.ft=setInterval(()=>{S.fl--;$('ft').textContent=S.fl;if(S.fl<=0){clearInterval(S.ft);$('fq').textContent='انتهى! صحيح: '+S.fc;$('fo').innerHTML='';if(S.fc>=6)boom();snd('win')}},1000)}
+function fnext(){const it=F[Math.floor(Math.random()*F.length)];$('fq').textContent=it[0];$('fo').innerHTML='';CATS.forEach((c,k)=>{const b=document.createElement('button');b.className='opt';b.textContent=c;b.onclick=()=>{if(S.fl<=0)return;if(k==it[1]){S.fc++;$('fc').textContent=S.fc;snd('ok')}else snd('no');fnext()};$('fo').appendChild(b)})}
+function boom(){const c=$('cv'),x=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;const p=Array.from({length:140},()=>({x:Math.random()*c.width,y:-20,v:2+Math.random()*4,s:4+Math.random()*6,c:'hsl('+Math.random()*360+',90%,60%)',r:Math.random()*6}));let f=0;
+(function a(){x.clearRect(0,0,c.width,c.height);p.forEach(q=>{q.y+=q.v;q.x+=Math.sin(q.y/30);q.r+=.1;x.fillStyle=q.c;x.fillRect(q.x,q.y,q.s,q.s*Math.abs(Math.cos(q.r)))});if(++f<240)requestAnimationFrame(a);else x.clearRect(0,0,c.width,c.height)})()}
+</script></body></html>
